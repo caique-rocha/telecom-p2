@@ -34,7 +34,36 @@ module mkHDB3Decoder(HDB3Decoder);
             let recent_symbols = tuple4(fifos[0].first, fifos[1].first, fifos[2].first, fifos[3].first);
             let value = 0;
 
-            // TODO: preencha aqui com a sua lógica
+
+            case (state)
+                IDLE_OR_S1:
+
+                    if (recent_symbols == tuple4(P, Z, Z, P) ||
+                        recent_symbols == tuple4(N, Z, Z, N) ||
+                        (recent_symbols == tuple4(Z, Z, Z, P) && last_pulse_p) ||
+                        (recent_symbols == tuple4(Z, Z, Z, N) && !last_pulse_p))
+                    begin
+                        if (tpl_1(recent_symbols) != Z) begin
+                            last_pulse_p <= !last_pulse_p;
+                        end
+                        state <= S2;
+                    end else if (tpl_1(recent_symbols) != Z) begin
+                        value = 1;
+                        last_pulse_p <= !last_pulse_p;
+                    end
+                S2:
+                    action
+                        state <= S3;
+                    endaction
+                S3:
+                    action
+                        state <= S4;
+                    endaction
+                S4:
+                    action
+                        state <= IDLE_OR_S1;
+                    endaction
+            endcase
 
             fifos[0].deq;
             return value;
